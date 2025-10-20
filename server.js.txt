@@ -1,0 +1,25 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const connectDB = require('./config/db');
+
+const productsRoute = require('./routes/products');
+const ordersRoute = require('./routes/orders');
+const contactRoute = require('./routes/contact');
+
+const app = express();
+connectDB();
+
+app.use(cors());
+app.use(express.json());
+
+// api routes
+app.use('/api/products', productsRoute);
+app.use('/api/orders', ordersRoute);
+app.use('/api/contact', contactRoute);
+
+// health
+app.get('/', (req, res) => res.send({ ok: true, msg: 'GoalPro Backend running' }));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

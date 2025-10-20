@@ -1,0 +1,25 @@
+document.getElementById('sendBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const product = document.getElementById('product').value.trim();
+  const message = document.getElementById('message').value.trim();
+  if(!name || !phone){ alert('Please enter your name and phone'); return; }
+
+  try {
+    const res = await fetch('http://localhost:5000/api/contact', {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ name, phone, product, message })
+    });
+    if(!res.ok){
+      const data = await res.json();
+      alert('Error: ' + (data?.errors?.[0]?.msg || data?.error || 'Server error'));
+      return;
+    }
+    alert('Thanks ' + name + '! We received your inquiry.');
+    document.getElementById('contactForm').reset();
+  } catch (err){
+    alert('Network error — could not send inquiry.');
+    console.error(err);
+  }
+});

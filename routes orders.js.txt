@@ -1,0 +1,52 @@
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const router = express.Router();
+const Order = require('../models/Order');
+const Product = require('../models/Product');
+
+// POST /api/orders  - create order
+router.post('/',
+  body('customerName').trim().notEmpty(),
+  body('phone').trim().notEmpty(),
+  body('items').isArray({ min: 1 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    try {
+      const { customerName, phone, address, items } = req.body;
+      // calculate total
+      let total = 0;
+      const itemsPrepared = items.map(it => {
+        const price = Number(it.price) || 0;
+        const qty = Number(it.qty) || 1;
+        total += price * qty;
+        return {
+          productId: it.productId || null,
+          title: it.title,
+          price,
+          qty,
+          image: it.image
+        };
+      });
+
+      const order = await Order.create({ items: itemsPrepared, total, customerName, phone, address });
+      res.status(201).json({ ok: true, order });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Server error' });
+    }
+  }
+);
+
+// GET /api/orders  (simple listing) - optional admin usage
+router.get('/', async (req, res) => {
+  try {
+    const list = await Order.find().sort({ createdAt: -1 });
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+module.exports = router;
